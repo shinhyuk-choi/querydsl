@@ -1,7 +1,7 @@
 package com.newest.querydsl;
 
 import com.newest.querydsl.entity.Member;
-import com.newest.querydsl.entity.QMember;
+import static com.newest.querydsl.entity.QMember.member;
 import com.newest.querydsl.entity.Team;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
@@ -56,14 +56,15 @@ public class QuerydslBasicTest {
     @Test
     void startQuerydsl() {
         // given
-        QMember m = new QMember("m");
+//        QMember m = new QMember("m"); 셀프조인을 하는 경우 alias를 별도로 지정해서 활용하기도 한다.
+//        QMember m = QMember.member;
 
         // when
         // 컴파일 시점에 문법 오류 검사 발견
         Member member1 = queryFactory
-                .select(m)
-                .from(m)
-                .where(m.username.eq("member1"))
+                .select(member)
+                .from(member)
+                .where(member.username.eq("member1"))
                 .fetchOne();
 
         // then
