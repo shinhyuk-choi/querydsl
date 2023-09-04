@@ -1,10 +1,8 @@
 package com.newest.querydsl;
 
 import com.newest.querydsl.entity.Member;
-import com.newest.querydsl.entity.QMember;
 import static com.newest.querydsl.entity.QMember.member;
 import com.newest.querydsl.entity.Team;
-import com.querydsl.core.QueryResults;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -154,6 +152,22 @@ public class QuerydslBasicTest {
         assertThat(member5.getUsername()).isEqualTo("member5");
         assertThat(member6.getUsername()).isEqualTo("member6");
         assertThat(memberNull.getUsername()).isNull();
+    }
+
+    @Test
+    void paging() {
+        // given
+
+        // when
+        List<Member> result = queryFactory
+                .selectFrom(member)
+                .orderBy(member.username.desc())
+                .offset(1)
+                .limit(2)
+                .fetch();
+
+        // then
+        assertThat(result.size()).isEqualTo(2);
     }
 
 }
