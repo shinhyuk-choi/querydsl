@@ -8,6 +8,7 @@ import com.newest.querydsl.entity.Team;
 import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,8 @@ public class QuerydslBasicTest {
 
     @Autowired
     EntityManager em;
+    @Autowired
+    EntityManagerFactory emf;
     JPAQueryFactory queryFactory;
 
     @BeforeEach
@@ -271,6 +274,39 @@ public class QuerydslBasicTest {
         for (Tuple tuple : result) {
             System.out.println("tuple = " + tuple);
         }
+    }
+
+    @Test
+    public void fetchJoinNo() {
+        // given
+        em.flush();
+        em.clear();
+
+        // when
+        Member member1 = queryFactory
+                .selectFrom(member)
+                .where(member.username.eq("member1"))
+                .fetchOne();
+        // then
+        boolean loaded = emf.getPersistenceUnitUtil().isLoaded(member1.getTeam());
+        assertThat(loaded).as("패치 조인 미적용").isFalse();
+    }
+
+    @Test
+    public void fetchJoin() {
+        // given
+        em.flush();
+        em.clear();
+
+        // when
+        Member member1 = queryFactory
+                .selectFrom(member)
+                .join(member.team, team).fetchJoin()
+                .where(member.username.eq("member1"))
+                .fetchOne();
+        // then
+        boolean loaded = emf.getPersistenceUnitUtil().isLoaded(member1.getTeam());
+        assertThat(loaded).as("패치 조인 미적용").isTrue();
     }
 
 }
