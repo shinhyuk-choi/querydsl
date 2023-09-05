@@ -1,11 +1,13 @@
 package com.newest.querydsl;
 
 import com.newest.querydsl.entity.Member;
+import com.newest.querydsl.entity.QMember;
 import static com.newest.querydsl.entity.QMember.member;
 import com.newest.querydsl.entity.QTeam;
 import static com.newest.querydsl.entity.QTeam.*;
 import com.newest.querydsl.entity.Team;
 import com.querydsl.core.Tuple;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -308,5 +310,44 @@ public class QuerydslBasicTest {
         boolean loaded = emf.getPersistenceUnitUtil().isLoaded(member1.getTeam());
         assertThat(loaded).as("패치 조인 미적용").isTrue();
     }
+
+    @Test
+    public void subQuery() {
+        // given
+        QMember memberSub = new QMember("memberSub");
+        // when
+        List<Member> result = queryFactory
+                .selectFrom(member)
+                .where(member.age.eq(
+                        JPAExpressions
+                                .select(memberSub.age.max())
+                                .from(memberSub)
+                ))
+                .fetch();
+        // then
+        assertThat(result).extracting("age")
+                .containsExactly(40);
+    }
+
+    @Test
+    public void selectSubquery() {
+        // given
+        QMember memberSub = new QMember("memberSub");
+        // when
+        List<Tuple> result = queryFactory
+                .select(member.username,
+                        JPAExpressions
+                                .select(memberSub.age.avg())
+                                .from(memberSub))
+                .from(member)
+                .fetch();
+
+
+        // then
+        for (Tuple tuple : result) {
+            System.out.println("tuple = " + tuple);
+        }
+    }
+
 
 }
