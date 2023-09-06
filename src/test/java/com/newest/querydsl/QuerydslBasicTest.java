@@ -1,12 +1,14 @@
 package com.newest.querydsl;
 
+import com.newest.querydsl.dto.MemberDto;
+import com.newest.querydsl.dto.QMemberDto;
 import com.newest.querydsl.entity.Member;
 import com.newest.querydsl.entity.QMember;
 import static com.newest.querydsl.entity.QMember.member;
-import com.newest.querydsl.entity.QTeam;
-import static com.newest.querydsl.entity.QTeam.*;
+import static com.newest.querydsl.entity.QTeam.team;
 import com.newest.querydsl.entity.Team;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
@@ -239,7 +241,7 @@ public class QuerydslBasicTest {
                 .extracting("username")
                 .containsExactly("member1", "member2");
     }
-    
+
     @Test
     void theta_join() {
         // given
@@ -349,5 +351,126 @@ public class QuerydslBasicTest {
         }
     }
 
+    @Test
+    public void simpleProjection() {
+        // given
 
+        // when
+        List<String> result = queryFactory
+                .select(member.username)
+                .from(member)
+                .fetch();
+
+        // then
+        for (String s : result) {
+            System.out.println("s = " + s);
+        }
+    }
+
+    @Test
+    public void tupleProjection() {
+        // given
+
+        // when
+        List<Tuple> result = queryFactory
+                .select(member.username, member.age)
+                .from(member)
+                .fetch();
+
+        // then
+        for (Tuple tuple : result) {
+            String username = tuple.get(member.username);
+            Integer age = tuple.get(member.age);
+            System.out.println("username = " + username);
+            System.out.println("age = " + age);
+        }
+    }
+
+    @Test
+    public void findDtoByJPQL() {
+        // given
+
+        // when
+        List<MemberDto> result = em.createQuery(
+                        "select new com.newest.querydsl.dto.MemberDto(m.username, m.age) from Member m", MemberDto.class)
+                .getResultList();
+
+        // then
+        for (MemberDto memberDto : result) {
+            System.out.println("memberDto = " + memberDto);
+        }
+    }
+
+    @Test
+    public void findDtoBySetter() {
+        // given
+
+        // when
+        List<MemberDto> result = queryFactory
+                .select(Projections.bean(MemberDto.class,
+                        member.username,
+                        member.age))
+                .from(member)
+                .fetch();
+
+        // then
+        for (MemberDto memberDto : result) {
+            System.out.println("memberDto = " + memberDto);
+        }
+    }
+
+    @Test
+    public void findDtoByField() {
+        // given
+
+        // when
+        List<MemberDto> result = queryFactory
+                .select(Projections.fields(MemberDto.class,
+                        member.username,
+                        member.age))
+                .from(member)
+                .fetch();
+
+        // then
+        for (MemberDto memberDto : result) {
+            System.out.println("memberDto = " + memberDto);
+        }
+    }
+
+    @Test
+    public void findDtoByConstructor() {
+        // given
+
+        // when
+        List<MemberDto> result = queryFactory
+                .select(Projections.constructor(MemberDto.class,
+                        member.username,
+                        member.age))
+                .from(member)
+                .fetch();
+
+        // then
+        for (MemberDto memberDto : result) {
+            System.out.println("memberDto = " + memberDto);
+        }
+    }
+    
+    @Test
+    public void findDtoByQueryProjection() {
+        // given
+        //생성자 방식 대비 컴파일 시점에 오류를 잡아낼 수 있는 장점
+        //반면에 의존성이 생기는 단점이 있음
+        // when
+        List<MemberDto> result = queryFactory
+                .select(new QMemberDto(member.username, member.age))
+                .from(member)
+                .fetch();
+
+        // then
+        for (MemberDto memberDto : result) {
+            System.out.println("memberDto = " + memberDto);
+        }
+    }
+
+        
 }
