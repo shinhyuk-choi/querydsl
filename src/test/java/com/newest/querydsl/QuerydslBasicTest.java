@@ -21,6 +21,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Commit;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -538,4 +539,40 @@ public class QuerydslBasicTest {
     private BooleanExpression allEq(String usernameCond, Integer ageCond) {
         return usernameEq(usernameCond).and(ageEq(ageCond));
     }
+
+    @Test
+    public void bulkUpdate() {
+        // given
+
+        // when
+        queryFactory
+                .update(member)
+                .set(member.username, "비회원")
+                .where(member.age.lt(28))
+                .execute();
+
+        // 실행 후, 영속성 컨텍스트의 entity와 DB의 상태가 달라진다.
+        // DB에서 select해서 와도, 영속성 컨텍스트가 있으면 DB 결과를 무시한다.
+        // 영속성 컨텍스트가 우선권을 갖는다.
+        // bulk 연산 후에는 영속성 컨텍스를 초기화 하는 것이 좋다.
+        em.flush();
+        em.clear();
+        // then
+        List<Member> result = queryFactory
+                .selectFrom(member)
+                .fetch();
+    }
+
+    @Test
+    public void bulkAdd() {
+        // given
+
+        // when
+        queryFactory
+                .update(member)
+                .set(member.age, member.age.add(1))
+                .execute();
+        // then
+    }
+
 }
