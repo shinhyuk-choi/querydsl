@@ -11,6 +11,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -70,4 +72,17 @@ class MemberRepositoryTest {
         // then
         AssertionsForInterfaceTypes.assertThat(result).extracting("username").containsExactly("member4");
     }
+    @Test
+    public void searchComplex() {
+        // given
+        MemberSearchCondition memberSearchCondition = new MemberSearchCondition();
+        memberSearchCondition.setAgeGoe(35);
+        memberSearchCondition.setAgeLoe(40);
+        memberSearchCondition.setTeamName("teamB");
+        // when
+        memberRepository.searchPageComplex(memberSearchCondition,
+                PageRequest.of(0, 3));
+        // then
+    }
+
 }
